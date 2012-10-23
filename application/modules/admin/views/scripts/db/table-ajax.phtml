@@ -1,0 +1,50 @@
+<?php foreach ($this->result as $rowId => $columnFamilies) : ?>
+<h2 class="expand"><?php echo $rowId?>
+	<a href="/admin/db/table/name/<?php echo $this->table?>/id/<?php echo $rowId?>/cf/<?php echo $this->current_cf ?>">перейти</a><a onclick="javascript:deleteRow('<?php echo $rowId?>', this)" style="float:right;" ref="/admin/db/delete-row/table/<?php echo $this->table?>/row/<?php echo $rowId?>">Удалить</a>
+</h2>
+<div class='collapse' id="<?php echo $rowId?>">
+<?php foreach ($columnFamilies as $columnFamily => $columns) : ?>
+	<table>
+		<thead>
+		<tr>
+			<td width="1">
+				<a href="/admin/db/add/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>">Add</a>
+			</td>
+			<td width="1"></td>
+			<th colspan="3" onclick="javascript:setColumnFamily('<?php echo $columnFamily?>')">
+				<a name="<?php echo $rowId . $columnFamily?>">@</a> <?php echo $columnFamily?></th>
+		</tr>
+
+		</thead>
+		<tbody>
+		<tr>
+			<th>Id</th>
+			<th>Family</th>
+			<th width="150px">Name</th>
+			<th>Value</th>
+			<th>Actions</th>
+		</tr>
+		<?php $i = 0; foreach ($columns as $columnName => $columnValue) : ?>
+		<?php $i++; ?>
+		<tr class="<?php echo ($i % 2 > 0) ? '' : 'odd'; ?>">
+			<th><?php echo $rowId?></th>
+			<td><?php echo $columnFamily?></td>
+			<td title="<?php echo date('d.m.Y H:i:s', $this->rows[$rowId][$columnFamily][$columnName]->timestamp / 1000) ?>">
+				<a onclick="javascript:setColumnNameForCache(this)" name="<?php echo $rowId . $columnFamily . $columnName?>"><?php echo $columnName?></a>
+			</td>
+			<td onclick="javascript:switchTitleValue(this)" title="<?php echo htmlspecialchars($columnValue)?>"><?php echo htmlspecialchars(Zend_Json_Decoder::decodeUnicodeString($columnValue))?></td>
+			<td width="100px">
+				<a class="action" href="/admin/db/edit/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">edit</a>
+
+				<a class="delete" onclick="return a_delete_click(this)" href="/admin/db/delete/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">del</a>
+
+				<a class="cache" onclick="return a_cache_click(this)" href="/admin/db/cache/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">cache</a>
+			</td>
+		</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
+<?php endforeach ?>
+</div>
+<?php endforeach ?>
+<div class="hidden last_row_id" id="last_row_id"><?php echo $this->last_row_id ?></div>

@@ -1,0 +1,29 @@
+<?php
+header('Content-Type: text/html; charset=utf-8');
+echo $this->doctype() ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<link rel="shortcut icon" href="favicon.ico" />
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>Admin</title>
+  <link rel="stylesheet" type="text/css" href="/css/admin/admin.css" />
+  <script type="text/javascript" src="/js/jquery-1.6.2.min.js"></script>
+	<script src="/js/autocomplete-search.js"></script>
+	<script src="/js/jquery-ui-1.8.9.custom.min.js"></script>
+	<link rel="stylesheet" href="/css/ui-lightness/jquery-ui-1.8.9.custom.css"/>
+	<?php echo $this->headLink();?>
+    <?php echo $this->headScript();?>
+	<script src="/js/common.js"></script>
+	<script src="/js/common-admin.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="left-menu">
+            <?php echo $this->partial("_blocks/left-menu.phtml"); ?>
+        </div>
+        <div id="content">
+            <?php echo $this->layout()->content ?>
+        </div>
+    </div>
+</body>
+</html>

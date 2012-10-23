@@ -1,0 +1,49 @@
+<head>
+	<title><?php echo 'A -'.$this->cacheKey ?></title>
+</head>
+<script type="text/javascript" src="/js/jquery-1.4.4.min.js"></script>
+
+<script type="text/javascript">
+	function load()
+	{
+		var cacheKey = $('#key').val();
+		$('.ajax-loader').removeClass('hidden');
+		$.getJSON('/admin/db/get-cache-key-ajax', {'id':cacheKey}, function(data)
+		{
+			$('.ajax-loader').addClass('hidden');			
+			$('div.cache_value').children('p.title').html(data.key);
+			$('div.cache_value').children('p.token').html(data.token);
+			$('div.cache_value').children('p.value').html(data.value);
+
+		})
+	}
+	function clearCache()
+	{
+		$.getJSON('/admin/db/clear-cache');
+	}
+	function deleteCacheKey()
+	{
+		var cacheKey = $('#key').val();
+		$.getJSON('/admin/db/delete-cache-key', {'id':cacheKey});
+	}
+</script>
+
+<h1><a href="/admin/db/">Admin</a></h1>
+<h3><a href="/admin/db/clear-cache/">стереть кэш</a></h3>
+<form action="">
+<input id="key" type="text" name="key" value="<?php echo $this->cacheKey ?>">
+<input type="button" value="view" onclick="load()">
+<input type="button" value="erase this key" onclick="deleteCacheKey()">
+<input type="button" value="clear cache" onclick="clearCache()">
+<img class="ajax-loader hidden" src="/img/i/ajax-loader.gif" alt="" />
+	</form>
+<div class="cache_value">
+	<p class="title"></p>
+	<p class="token"></p>
+	<p class="value"></p>
+</div>
+<style type="text/css">
+	.hidden{
+		display: none;
+	}
+</style>

@@ -1,0 +1,22 @@
+<head>
+	<title><?php echo 'A'?></title>
+</head>
+
+<h1><a href="/admin/db/">Admin</a></h1>
+<h2><a href="/admin/db/table/name/<?php echo $this->table?>"><?php echo $this->table?></a></h2>
+<h3><?php echo $this->currentCf ?></h3>
+<?php foreach ($this->result as $rowId => $value): ?>
+<a class="families" href="/admin/db/row/id/<?php echo $rowId?>/table/<?php echo $this->table?>"><?php echo $rowId?></a>
+<?php endforeach ?>
+
+<style type="text/css">
+
+	a.families{
+		float:left;
+		width:30px;
+		border:1px #333 solid;
+		background: #eee;
+		display:block;
+		margin: 5px 2px 5px 2px;
+	}
+</style>

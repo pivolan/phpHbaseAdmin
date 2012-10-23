@@ -1,0 +1,610 @@
+<head>
+	<title><?php echo 'A - ' . $this->table . ':' . $this->rowId?:'' ?></title>
+</head>
+<script type="text/javascript" src="/js/jquery-1.6.2.min.js"></script>
+<script type="text/javascript" src="/js/jquery-ui-1.8.9.custom.min.js"></script>
+<link rel="stylesheet" href="/css/ui-lightness/jquery-ui-1.8.9.custom.css"/>
+<script type="text/javascript">
+	var tables = <?php echo Zend_Json::encode($this->tables); ?>;
+	var navigation_link = {
+		init: function (a, b)
+		{
+			this.a = b;
+			this.b = a;
+		},
+		a: null,
+		b: null,
+		row_id: '<?php echo $this->rowId?:1 ?>',
+		table: '<?php echo $this->table ?>',
+		column_family: '<?php echo $this->current_cf ?>',
+		set_table: function (table)
+		{
+			this.table = table;
+			this.change_link_url();
+		},
+		set_row_id: function (row_id)
+		{
+			this.row_id = row_id;
+			this.change_link_url();
+		},
+		set_column_family: function (column_family)
+		{
+			this.column_family = column_family;
+			this.change_link_url();
+		},
+		change_link_url: function ()
+		{
+			var href = '/admin/db/row/table/' + this.table + '/id/' + this.row_id;
+			this.a.attr('href', href);
+			this.b.attr('href', href + '/cf/' + this.column_family);
+		}
+	};
+
+	function change_table_select(table)
+	{
+		var current_column_family = '<?php echo $this->current_cf ?>';
+		var select = $('#column_family_cache');
+		var options = {};
+		var option;
+		navigation_link.set_table(table);
+		navigation_link.set_column_family(tables[table][0]);
+		select.html('');
+		for (i in tables[table])
+		{
+			option = $('<option value=""></option>').html(tables[table][i]).val(tables[table][i]);
+			if (tables[table][i] == current_column_family)
+			{
+				option.attr('selected', true);
+				navigation_link.set_column_family(current_column_family);
+			}
+			select.append(option);
+		}
+		$('span.navigation > input#change_table').val(table);
+	}
+
+	function change_column_family(cf)
+	{
+		navigation_link.set_column_family(cf);
+	}
+
+	function collapseall()
+	{
+
+		$('div.collapse').css('display', 'none');
+	}
+	function expandall()
+	{
+		$('div.collapse').css('display', 'block');
+	}
+	function switchTitleValue(this1)
+	{
+		var html = $(this1).html();
+		$(this1).html($(this1).attr('title'));
+		$(this1).attr('title', html);
+	}
+	function setColumnNameForCache(this_q)
+	{
+		var html = $(this_q).text();
+		$("#row_id_cache").html(html);
+		$('input#<?php echo $this->table?>').val(html);
+		navigation_link.set_row_id(html);
+	}
+	function killme(this_q)
+	{
+		$(this_q).addClass('hidden');
+	}
+	function setColumnFamily(columnFamily, rowId)
+	{
+		$("#column_family_cache").html(columnFamily);
+		$("#row_id_cache").html(rowId);
+	}
+	function viewCache(this_q)
+	{
+		var navi_link = navigation_link;
+		var but = $(this_q);
+		var rowid = navi_link.row_id;
+		var columnFamily = navi_link.column_family;
+		var table = navi_link.table;
+		var div = $('#cache_view_block');
+		$('img.ajax_loader').removeClass('hidden');
+		$.getJSON('/admin/db/get-cache-key-ajax/', {'row_id':rowid, 'column_family':columnFamily, 'table':table}, function(json)
+		{
+			div.removeClass('hidden');
+			var html = '<h2>' + json.key + '</h2>';
+			html += '<p>' + json.value + '</p>';
+			div.html(html);
+
+			$('img.ajax_loader').addClass('hidden');
+		});
+
+	}
+	function viewBasicCache(this_q)
+	{
+		var but = $(this_q);
+		var navi_link = navigation_link;
+		var rowid = navi_link.row_id;
+		var columnFamily = navi_link.column_family;
+		var table = navi_link.table;
+		var div = $('#basic_cache_view_block');
+
+		$('img.ajax_loader').removeClass('hidden');
+		$.getJSON('/admin/db/get-basic-cache-key-ajax/', {'row_id':rowid, 'table':table}, function(json)
+		{
+			div.removeClass('hidden');
+			var html = '<h2>' + json.key + '</h2>';
+			html += '<p>' + json.value + '</p>';
+			div.html(html);
+
+			$('img.ajax_loader').addClass('hidden');
+		});
+	}
+	function deleteRow(id, this1)
+	{
+		var href = $(this1).attr('ref');
+		var link = $(this1);
+		link.text('Отправляется...');
+		$.get(href, null, function(data)
+		{
+			if (data == 'true')
+			{
+				link.parent().remove();
+				$('#' + id).remove();
+				link.text('Удалить');
+			}
+			else
+			{
+				link.parent().removeClass().addClass("red");
+				link.text('Удалить');
+			}
+		});
+		return false;
+	}
+	function filterColumnFamily(obj)
+	{
+		var navi = navigation_link;
+		var href = '/admin/db/table/name/'+navi.table+'/cf/' + navi.column_family;
+		window.location.href = href;		
+	}
+	function filterPrefix()
+	{
+		var navi = navigation_link;
+		if(navi.column_family == "")
+		{
+			var href = '/admin/db/table/name/'+navi.table + '/id/'+navi.row_id;
+		}
+		else
+		{
+			var href = '/admin/db/table/name/'+navi.table+'/cf/' + navi.column_family + '/id/'+navi.row_id;
+		}
+		window.location.href = href;
+	}
+</script>
+<h1><a href="/admin/db/">Admin</a></h1>
+<h3><a href="/admin/db/clear-cache/">стереть кэш</a></h3>
+<h2><a href="/admin/db/table/name/<?php echo $this->table?>"><?php echo $this->table?></a></h2>
+<?php if (isset($this->row)): ?>
+<h1><a href="/admin/db/table/name/<?php echo $this->table?>/only/1">BACK</a></h1>
+<?php endif ?>
+<h3><?php echo $this->current_cf ?></h3>
+
+<div class="hidden ui-widget-content" id="cache_view_block" onclick="javascript:killme(this)"> test</div>
+<div class="hidden" id="basic_cache_view_block" onclick="javascript:killme(this)"> test</div>
+
+<span class="navigation">
+	<img alt="" src="/img/i/ajax-loader.gif" class="hidden ajax_loader">
+	<span class="cache_view">
+		<select name="table_cache" id="table_cache" onChange="change_table_select(this.value)">
+		<?php foreach ($this->tables as $table => $value): ?>
+		<?php if ($table == $this->table): ?>
+			<option value="<?php echo $table ?>" selected><?php echo $table ?></option>
+		<?php else: ?>
+			<option value="<?php echo $table ?>"><?php echo $table ?></option>
+		<?php endif ?>
+		<?php endforeach ?>
+		</select>
+
+		<div id="row_id_cache" type="text" class="cache"><?php echo $this->rowId ?></div>
+		<select name="column_family_cache" id="column_family_cache" onChange="change_column_family(this.value)">
+		<?php foreach ($this->tables[$this->table] as $cf): ?>
+		<?php if ($this->current_cf == $cf): ?>
+			<option value="<?php echo $cf ?>" selected><?php echo $cf ?></option>
+		<?php else: ?>
+			<option value="<?php echo $cf ?>"><?php echo $cf ?></option>
+		<?php endif ?>
+		<?php endforeach ?>
+		</select>
+		<input type="button" onclick="javascript:filterColumnFamily(this)" value="ok"/>
+		<input type="button" onclick="javascript:viewCache(this)" value="cache"/>
+	</span>
+	<span class="cache_view">
+		<input type="button" onclick="javascript:viewBasicCache(this)" value="basic cache"/>
+	</span>
+	<b>table:</b>
+	<input type="text" name="table" id="change_table" value="<?php echo $this->table ?>"/>
+	<input type="text" class="input" id="<?php echo $this->table ?>" value="<?php echo $this->rowId?:1 ?>"/>
+	<input type="button" onclick="filterPrefix(this)" value="prefix">
+</span>
+
+<a href="javascript:collapseall();">collapse All</a><br/><a href="javascript:expandall();">expand All</a>
+
+<p> фильтры: </p>
+<p><a href="/admin/db/table/name/<?php echo $this->table?><?php echo $this->rowId?'/id/'.$this->rowId:''; ?>" class="green_dark"> общий </a></p>
+<?php foreach ($this->cf as $id=>$cf) : ?>
+<a href="/admin/db/table/name/<?php echo $this->table?><?php echo $this->rowId?'/id/'.$this->rowId:''; ?>/cf/<?php echo $cf ?>" class="<?php echo ($id % 2 == 0)?'green_dark':'green_light'; ?>"><?php echo $cf?></a>
+<?php endforeach ?>
+
+<?php $rowId = $this->rowId ?>
+<?php foreach ($this->result as $rowId => $columnFamilies) : ?>
+<h2 class="expand"><?php echo $rowId?>
+	<a href="/admin/db/table/name/<?php echo $this->table?>/id/<?php echo $rowId?>/cf/<?php echo $this->current_cf ?>">перейти</a><a onclick="javascript:deleteRow('<?php echo $rowId?>', this)" style="float:right;" ref="/admin/db/delete-row/table/<?php echo $this->table?>/row/<?php echo $rowId?>">Удалить</a>
+</h2>
+<div class='collapse' id="<?php echo $rowId?>">
+<?php foreach ($columnFamilies as $columnFamily => $columns) : ?>
+	<table>
+		<thead>
+		<tr>
+			<td width="1">
+				<a href="/admin/db/add/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>">Add</a>
+			</td>
+			<td width="1"></td>
+			<th colspan="3" onclick="javascript:setColumnFamily('<?php echo $columnFamily?>')">
+				<a name="<?php echo $rowId . $columnFamily?>">@</a> <?php echo $columnFamily?></th>
+		</tr>
+
+		</thead>
+		<tbody>
+		<tr>
+			<th>Id</th>
+			<th>Family</th>
+			<th width="150px">Name</th>
+			<th>Value</th>
+			<th>Actions</th>
+		</tr>
+		<?php $i = 0; foreach ($columns as $columnName => $columnValue) : ?>
+		<?php $i++; ?>
+		<tr class="<?php echo ($i % 2 > 0) ? '' : 'odd'; ?>">
+			<th><?php echo $rowId?></th>
+			<td><?php echo $columnFamily?></td>
+			<td title="<?php echo date('d.m.Y H:i:s', $this->rows[$rowId][$columnFamily][$columnName]->timestamp / 1000) ?>">
+				<a onclick="javascript:setColumnNameForCache(this)" name="<?php echo $rowId . $columnFamily . $columnName?>"><?php echo $columnName?></a>
+			</td>
+			<td onclick="javascript:switchTitleValue(this)" title="<?php echo htmlspecialchars($columnValue)?>"><?php echo htmlspecialchars(Zend_Json_Decoder::decodeUnicodeString($columnValue))?></td>
+			<td width="100px">
+				<a class="action" href="/admin/db/edit/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">edit</a>
+
+				<a class="delete" onclick="return a_delete_click(this)" href="/admin/db/delete/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">del</a>
+
+				<a class="cache" onclick="return a_cache_click(this)" href="/admin/db/cache/table/<?php echo $this->table ?>/row/<?php echo $rowId?>/cf/<?php echo $columnFamily?>/cn/<?php echo $columnName?>">cache</a>
+			</td>
+		</tr>
+		<?php endforeach ?>
+		</tbody>
+	</table>
+<?php endforeach ?>
+</div>
+<?php endforeach ?>
+<style type="text/css">
+	.hidden {
+		display: none;
+	}
+
+	span.navigation {
+		float: right;
+		position: fixed;
+		right: 15px;
+		display: block;
+		top: 5px;
+	}
+
+	span.navigation input.input {
+		width: 200px;
+		font-size: 70%;
+		background: #ccc;
+	}
+
+	span.navigation input#change_table {
+		width: 50px;
+		font-size: 70%;
+		background: #ccc;
+	}
+
+	span.navigation span.cache_view {
+	}
+
+	span.navigation span.cache_view div.cache {
+		background: #ccc;
+		border: 1px #A5D768 solid;
+		display: inline;
+	}
+
+	div#cache_view_block, div#basic_cache_view_block {
+		position: absolute;
+		left: 30%;
+		top: 30px;
+		background: #eee;
+		border: 2px #099 solid;
+		max-width: 700px;
+		max-height: 500px;
+		overflow: scroll;
+	}
+
+	span.navigation span.cache_view {
+	}
+
+	span.navigation span.cache_view input.cache {
+		width: 100px;
+		font-size: 70%;
+		background: #ccc;
+	}
+
+	h2 {
+		background: #ddd;
+	}
+
+	table {
+		width: 100%;
+		color: #212424;
+		margin: 0 0 1em 0;
+		font: 80%/150% "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Lucida, Helvetica, sans-serif;
+	}
+
+	table, tr, th, td {
+		margin: 10px 0 10px;
+		padding: 0;
+		border-spacing: 0;
+		border-collapse: collapse;
+	}
+
+	caption {
+		width: 100%;
+		height: 39px;
+		font-size: 0;
+		line-height: 0;
+		text-indent: -5000em;
+	}
+
+	caption:hover {
+		background-position: 98% 100%;
+	}
+
+	/* HEADER */
+
+	thead {
+		background: #806c3e;
+	}
+
+	thead tr th {
+		text-align: center;
+		color: #FAF7D4;
+		border-bottom: 3px solid #A5D768;
+	}
+
+	/* FOOTER */
+
+	tfoot {
+		color: #fff;
+		background: #524123;
+	}
+
+	tfoot tr th, tfoot tr td {
+		padding: .2em .6em;
+		border-top: 2px solid #A5D768;
+	}
+
+	tfoot tr th {
+	}
+
+	tfoot tr td {
+		text-align: right;
+	}
+
+	/* BODY */
+
+	tbody tr td {
+		background: #DDF0BD no-repeat top left;
+	}
+
+	tbody tr.odd td {
+		background-color: #D0EBA6;
+	}
+
+	tbody tr td:hover, tbody tr.odd td:hover {
+		background: #c5e894;
+	}
+
+	tbody tr th, tbody tr td {
+		padding: 0.1em 0.4em;
+		border: 1px solid #a6ce39;
+	}
+
+	tbody tr th {
+		padding-right: 1em;
+		text-align: left;
+		font-weight: normal;
+		background: #c5e894 no-repeat top left;
+		text-transform: uppercase;
+	}
+
+	tbody tr th:hover {
+		background: #D0EBA6;
+	}
+
+	table a[href*="taimar.pri.ee"] {
+		float: left;
+		width: 64px;
+		height: 64px;
+		font-size: 0;
+		text-decoration: none;
+		background: transparent no-repeat 0 0;
+	}
+
+	table a[title^="Download"] {
+		float: none;
+		width: auto;
+		height: auto;
+		font-size: 100%;
+		background: none;
+	}
+
+	/* LINKS */
+
+	table a {
+		color: #854400;
+		text-decoration: none;
+	}
+
+	table a:visited {
+		text-decoration: line-through;
+	}
+
+	table a:hover {
+		text-decoration: underline;
+	}
+
+	.red {
+		background: #ff9999;
+	}
+
+	.green_dark {
+		background: #C5E894;
+	}
+	.green_light {
+		background: #DDF0BD;
+	}
+	.green_dark:hover
+	{
+		background: #DDF0BD;
+	}
+	.green_light:hover
+	{
+		background: #C5E894;
+	}
+</style>
+<script type="text/javascript">
+	$('h2.expand').click(function()
+	{
+		var div = $(this).next('div.collapse');
+		var display = div.css('display');
+		if (display == 'none')
+		{
+			div.css('display', 'block');
+		}
+		else
+		{
+			div.css('display', 'none');
+		}
+	});
+	function a_delete_click(obj)
+	{
+		var href = $(obj).attr('href');
+		var link = $(obj);
+		$(obj).addClass('red');
+		$.get(href, null, function(data)
+		{
+			if (data == 'true')
+			{
+				link.parent().parent().remove();
+				link.text('del').removeClass('red');
+			}
+			else
+			{
+				link.parent().parent().children('td').removeClass().addClass("red");
+				link.text('del').removeClass('red');
+			}
+		});
+		return false;
+	}
+	function a_cache_click(obj)
+	{
+		var href = $(obj).attr('href');
+		var link = $(obj);
+		$(obj).addClass('red');
+		$.get(href, null, function(data)
+		{
+			if (data == 'true')
+			{
+				link.parent().parent().parent().children('tr').removeClass("odd");
+				link.parent().parent().children('td').removeClass("odd").removeClass("red").addClass("green");
+				link.text('cache').removeClass('red');
+				return false;
+			}
+			link.parent().parent().parent().children('tr').removeClass("odd");
+			link.parent().parent().children('td').removeClass("odd").removeClass("green").addClass("red").attr('title', data);
+			link.text('cache').removeClass('red');
+			return false;
+		});
+		return false;
+	}
+	$(document).ready(function()
+	{
+		var time_out_id;
+		navigation_link.init($('#navigation_link'), $('#navigation_link_all'));
+		$('span.navigation > input.input').keyup(function(evt)
+		{
+			var input = $(this);
+			var rowId = input.val();
+
+			navigation_link.set_row_id(rowId);
+			$('#row_id_cache').html(rowId);
+			$('#row_id_basic_cache').html(rowId);
+		});
+		$('span.navigation > input#change_table').keyup(function(evt)
+		{
+			var input = $(this);
+			var table = input.val();
+			clearTimeout(time_out_id);
+			time_out_id = setTimeout(function()
+			{
+				change_table_select(table);
+				$('#table_cache :selected').removeAttr('selected');
+				$('#table_cache [value="' + table + '"]').attr('selected', true);
+			}, 1000);
+
+		});
+		$('span.navigation > input, input#change_table').keypress(function(e)
+		{
+			var code = (e.keyCode ? e.keyCode : e.which);
+			if (code == 13)
+			{
+				filterPrefix();
+			}
+		});
+		var last_row_id = '<?php echo $rowId ?>';
+		$(window).scroll(function ()
+		{
+			var table = '<?php echo $this->table ?>';
+			var column_family = '<?php echo $this->current_cf ?>';
+			var window_current = window;
+			var y = window_current.pageYOffset;
+			var mY = window_current.scrollMaxY;
+			var delta = y / mY;
+
+			if (delta > 0.8)
+			{
+				var body = $('body');
+				if (body.data('status') != 'loading')
+				{
+					body.data('status', 'loading');
+					$.get('/admin/db/table-ajax/', {table:table, cf:column_family, last_row_id:last_row_id}, function(html)
+					{
+						var last = $(html).next('div.hidden.last_row_id');
+						if (last.length > 0)
+						{
+							last_row_id = last.html();
+						}
+						else
+						{
+							last_row_id = '';
+						}
+						last.remove();
+						body.data('status', true).append(html);
+					});
+
+				}
+
+			}
+		});
+
+	});
+
+</script>
